@@ -35,7 +35,7 @@ test.describe('FeedPage', () => {
     await mockFeedApis(page, 42);
     await page.goto('/feed/42');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('center').first()).toHaveScreenshot('feed-title-section.png');
+    await expect(page.locator('h1').first()).toHaveScreenshot('feed-title-section.png');
   });
 
   test('BottomRowButtons isolated', async ({ page }) => {

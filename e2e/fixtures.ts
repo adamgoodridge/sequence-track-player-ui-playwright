@@ -153,6 +153,9 @@ export async function mockFeedApis(page: Page, feedId = 42) {
   await page.route(`**/api/v1/feed/get/current/${feedId}**`, (route) =>
     route.fulfill({ json: FEED })
   );
+  await page.route(`**/api/v1/feed/get/next/${feedId}**`, (route) =>
+    route.fulfill({ json: FEED })
+  );
   await page.route('**/api/v1/settings/regularly_change_to_random', (route) =>
     route.fulfill({ json: { booleanValue: false, name: 'regularly_change_to_random', value: false } })
   );
@@ -189,5 +192,9 @@ export async function mockBookmarksApis(page: Page) {
 }
 
 export async function stallAllApis(page: Page) {
-  await page.route('**/api/**', () => { /* never fulfill – keeps page in loading state */ });
+  await page.route('**/api/**', async (route) => {
+    // Keep request pending until the page closes (webkit requires a clean abort on teardown)
+    await new Promise<void>((resolve) => page.once('close', resolve));
+    await route.abort().catch(() => {});
+  });
 }

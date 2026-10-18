@@ -35,10 +35,13 @@ test.describe('MainSettingForm', () => {
     await expect(page).toHaveScreenshot('settings-error-banner.png');
   });
 
-  test('initial empty state – form before API responds', async ({ page }) => {
+  test('loading state – centered spinner before API responds', async ({ page }) => {
     await stallAllApis(page);
     await page.goto('/settings/main', { waitUntil: 'domcontentloaded' });
-    await expect(page.locator('h1')).toBeVisible();
+    await expect(page.getByRole('status')).toBeVisible();
+    await expect(page.getByRole('status')).toContainText('Loading settings...');
+    await expect(page.getByRole('heading', { name: 'Main Settings' })).toBeVisible();
+    await expect(page.getByRole('button', { name: /save/i })).toBeHidden();
     await expect(page).toHaveScreenshot('settings-empty-form.png');
   });
 });
