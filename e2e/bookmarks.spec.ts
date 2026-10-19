@@ -10,9 +10,7 @@ test.describe('BookmarkListPage', () => {
   });
 
   test('empty state', async ({ page }) => {
-    await page.route('**/api/v1/bookmark', (route) =>
-      route.fulfill({ json: [] })
-    );
+    await page.route('**/api/v1/bookmark', (route) => route.fulfill({ json: [] }));
     await page.goto('/bookmark/list');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('bookmarks-empty.png');

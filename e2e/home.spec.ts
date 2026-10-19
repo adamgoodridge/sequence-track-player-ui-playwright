@@ -27,9 +27,7 @@ test.describe('HomePage', () => {
     await page.route('**/api/v1/settings/logo_view', (route) =>
       route.fulfill({ status: 500, body: 'error' })
     );
-    await page.route('**/api/v1/shortcut**', (route) =>
-      route.fulfill({ json: [] })
-    );
+    await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: [] }));
     await page.route('**/api/v1/commit-time', (route) =>
       route.fulfill({ json: { commitTime: '' } })
     );
@@ -51,6 +49,8 @@ test.describe('HomePage', () => {
     await mockHomeListApis(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await expect(page.locator('nav[aria-label="Mobile navigation"]')).toHaveScreenshot('mobile-nav.png');
+    await expect(page.locator('nav[aria-label="Mobile navigation"]')).toHaveScreenshot(
+      'mobile-nav.png'
+    );
   });
 });

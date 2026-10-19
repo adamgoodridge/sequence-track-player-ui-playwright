@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { mockBrowserApis, stallAllApis } from './fixtures';
 
 test.describe('BrowserPage', () => {
-  test('file list – BrowserFileList, List, Breadcrumbs, BreadcrumbLink, BreadcrumbLast', async ({ page }) => {
+  test('file list – BrowserFileList, List, Breadcrumbs, BreadcrumbLink, BreadcrumbLast', async ({
+    page,
+  }) => {
     await mockBrowserApis(page, false);
     await page.goto('/browser');
     await page.waitForLoadState('networkidle');
@@ -27,9 +29,7 @@ test.describe('BrowserPage', () => {
     await page.route('**/api/v1/browser-items**', (route) =>
       route.fulfill({ status: 500, body: 'error' })
     );
-    await page.route('**/api/v1/shortcut**', (route) =>
-      route.fulfill({ json: [] })
-    );
+    await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: [] }));
     await page.goto('/browser');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('browser-error.png');

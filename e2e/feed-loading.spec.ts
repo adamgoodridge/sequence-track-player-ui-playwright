@@ -19,9 +19,7 @@ test.describe('FeedLoading page', () => {
   });
 
   test('unable to load – ErrorMessage', async ({ page }) => {
-    await page.route('**/api/v1/feed/request/**', (route) =>
-      route.fulfill({ json: null })
-    );
+    await page.route('**/api/v1/feed/request/**', (route) => route.fulfill({ json: null }));
     await page.goto('/feed/get/random/jazz');
     await page.waitForLoadState('networkidle');
     await expect(page).toHaveScreenshot('feed-loading-unable.png');

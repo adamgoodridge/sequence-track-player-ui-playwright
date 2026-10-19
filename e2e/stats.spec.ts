@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { mockStatsApis, stallAllApis } from './fixtures';
+import { mockStatsApis, mockDate, stallAllApis } from './fixtures';
 
 test.describe('StatsPage', () => {
   test('loaded – DatePicker, DateRangePieChart, StatsCard, StatsList', async ({ page }) => {
@@ -10,6 +10,7 @@ test.describe('StatsPage', () => {
   });
 
   test('no data state', async ({ page }) => {
+    await mockDate(page, '2026-10-18');
     await page.route('**/api/v1/statistic/summary/week**', (route) =>
       route.fulfill({ json: { length: 0, feedCounts: [], weekSummaries: [], totalLength: '0' } })
     );
@@ -26,6 +27,7 @@ test.describe('StatsPage', () => {
   });
 
   test('error state – ErrorAlert', async ({ page }) => {
+    await mockDate(page, '2026-10-18');
     await page.route('**/api/v1/statistic/summary/week**', (route) =>
       route.fulfill({ status: 500, body: 'error' })
     );

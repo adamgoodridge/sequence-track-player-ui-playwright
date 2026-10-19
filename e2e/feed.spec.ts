@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import { mockFeedApis, stallAllApis } from './fixtures';
 
 test.describe('FeedPage', () => {
-  test('loaded – FeedView, FeedTitleSection, FeedPlayerSection, BottomRowButtons', async ({ page }) => {
+  test('loaded – FeedView, FeedTitleSection, FeedPlayerSection, BottomRowButtons', async ({
+    page,
+  }) => {
     await mockFeedApis(page, 42);
     await page.goto('/feed/42');
     await page.waitForLoadState('networkidle');
@@ -42,7 +44,10 @@ test.describe('FeedPage', () => {
     await mockFeedApis(page, 42);
     await page.goto('/feed/42');
     await page.waitForLoadState('networkidle');
-    const buttons = page.locator('div').filter({ has: page.locator('button') }).last();
+    const buttons = page
+      .locator('div')
+      .filter({ has: page.locator('button') })
+      .last();
     await expect(buttons).toHaveScreenshot('feed-bottom-row-buttons.png');
   });
 });

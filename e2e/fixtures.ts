@@ -1,8 +1,29 @@
 import type { Page } from '@playwright/test';
 
+const EXAMPLE_LOGOS: Record<string, string> = {
+  'FlagA.png': new URL('../example-images/FlagA.png', import.meta.url).pathname,
+  'FlagB.png': new URL('../example-images/FlagB.png', import.meta.url).pathname,
+  'FlagC.png': new URL('../example-images/FlagC.png', import.meta.url).pathname,
+  'Tiger.png': new URL('../example-images/Tiger.png', import.meta.url).pathname,
+};
+
 export const SHORTCUTS = [
   { id: '1', feedName: 'jazz', title: 'Jazz', logoPath: '', count: 3, sessionId: '' },
   { id: '2', feedName: 'classical', title: 'Classical', logoPath: '', count: 0, sessionId: '' },
+];
+
+export const ICON_SHORTCUTS = [
+  { id: '1', feedName: 'jazz', title: 'Jazz', logoPath: 'FlagA.png', count: 3, sessionId: '' },
+  {
+    id: '2',
+    feedName: 'classical',
+    title: 'Classical',
+    logoPath: 'FlagC.png',
+    count: 0,
+    sessionId: '',
+  },
+  { id: '3', feedName: 'rock', title: 'Rock', logoPath: 'FlagB.png', count: 5, sessionId: '' },
+  { id: '4', feedName: 'blues', title: 'Blues', logoPath: 'blues.svg', count: 7, sessionId: '' },
 ];
 
 export const FEED = {
@@ -47,8 +68,20 @@ export const CURRENT_FEEDS = {
     {
       feedName: 'Jazz',
       audioFeederItems: [
-        { feedId: 1, trackName: 'Blue Rondo', includeInFullScreenShuffle: true, isIncludeInFullScreenShuffle: true, text: '' },
-        { feedId: 1, trackName: 'Take Five', includeInFullScreenShuffle: true, isIncludeInFullScreenShuffle: true, text: '' },
+        {
+          feedId: 1,
+          trackName: 'Blue Rondo',
+          includeInFullScreenShuffle: true,
+          isIncludeInFullScreenShuffle: true,
+          text: '',
+        },
+        {
+          feedId: 1,
+          trackName: 'Take Five',
+          includeInFullScreenShuffle: true,
+          isIncludeInFullScreenShuffle: true,
+          text: '',
+        },
       ],
     },
     {
@@ -111,36 +144,59 @@ export const BOOKMARKS = [
   { bookmarkId: 'bm-2', path: '/music/classical', feedName: 'Classical' },
 ];
 
+// ── Helpers ────────────────────────────────────────────────────────────────────
+
+export async function mockDate(page: Page, isoDate: string) {
+  const fakeNow = new Date(isoDate).getTime();
+  await page.addInitScript(`{
+    const _fakeNow = ${fakeNow};
+    const _OriginalDate = Date;
+    class _MockDate extends _OriginalDate {
+      constructor(...args) {
+        if (args.length === 0) { super(_fakeNow); } else { super(...args); }
+      }
+      static now() { return _fakeNow; }
+    }
+    _MockDate.parse = _OriginalDate.parse;
+    _MockDate.UTC   = _OriginalDate.UTC;
+    globalThis.Date = _MockDate;
+  }`);
+}
+
 // ── Route helpers ──────────────────────────────────────────────────────────────
 
 export async function mockHomeListApis(page: Page) {
   await page.route('**/api/v1/settings/logo_view', (route) =>
     route.fulfill({ json: { booleanValue: false, name: 'logo_view', value: false } })
   );
-  await page.route('**/api/v1/shortcut**', (route) =>
-    route.fulfill({ json: SHORTCUTS })
-  );
+  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: SHORTCUTS }));
   await page.route('**/api/v1/commit-time', (route) =>
     route.fulfill({ json: { commitTime: '2024-01-01T00:00:00Z' } })
   );
 }
 
 export async function mockHomeIconApis(page: Page) {
+  await page.route('**/exclude/logos/**', (route) => {
+    const filename = route.request().url().split('/').pop() ?? '';
+    const logo = EXAMPLE_LOGOS[filename];
+    if (!logo) {
+      return route.abort();
+    }
+    return filename.endsWith('.png')
+      ? route.fulfill({ path: logo })
+      : route.fulfill({ contentType: 'image/svg+xml', body: logo });
+  });
   await page.route('**/api/v1/settings/logo_view', (route) =>
     route.fulfill({ json: { booleanValue: true, name: 'logo_view', value: true } })
   );
-  await page.route('**/api/v1/shortcut**', (route) =>
-    route.fulfill({ json: SHORTCUTS })
-  );
+  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: ICON_SHORTCUTS }));
   await page.route('**/api/v1/commit-time', (route) =>
     route.fulfill({ json: { commitTime: '2024-01-01T00:00:00Z' } })
   );
 }
 
 export async function mockSettingsApis(page: Page) {
-  await page.route('**/api/v1/settings/form', (route) =>
-    route.fulfill({ json: SETTING_FIELDS })
-  );
+  await page.route('**/api/v1/settings/form', (route) => route.fulfill({ json: SETTING_FIELDS }));
 }
 
 export async function mockFeedApis(page: Page, feedId = 42) {
@@ -153,11 +209,11 @@ export async function mockFeedApis(page: Page, feedId = 42) {
   await page.route(`**/api/v1/feed/get/current/${feedId}**`, (route) =>
     route.fulfill({ json: FEED })
   );
-  await page.route(`**/api/v1/feed/get/next/${feedId}**`, (route) =>
-    route.fulfill({ json: FEED })
-  );
+  await page.route(`**/api/v1/feed/get/next/${feedId}**`, (route) => route.fulfill({ json: FEED }));
   await page.route('**/api/v1/settings/regularly_change_to_random', (route) =>
-    route.fulfill({ json: { booleanValue: false, name: 'regularly_change_to_random', value: false } })
+    route.fulfill({
+      json: { booleanValue: false, name: 'regularly_change_to_random', value: false },
+    })
   );
   await page.route('**/api/v1/settings/is_scanning', (route) =>
     route.fulfill({ json: { booleanValue: false, name: 'is_scanning', value: false } })
@@ -165,36 +221,29 @@ export async function mockFeedApis(page: Page, feedId = 42) {
 }
 
 export async function mockCurrentFeedsApis(page: Page) {
-  await page.route('**/api/v1/feed/current**', (route) =>
-    route.fulfill({ json: CURRENT_FEEDS })
-  );
+  await page.route('**/api/v1/feed/current**', (route) => route.fulfill({ json: CURRENT_FEEDS }));
 }
 
 export async function mockStatsApis(page: Page) {
-  await page.route('**/api/v1/statistic/summary/week**', (route) =>
-    route.fulfill({ json: STATS })
-  );
+  await mockDate(page, '2026-10-18');
+  await page.route('**/api/v1/statistic/summary/week**', (route) => route.fulfill({ json: STATS }));
 }
 
 export async function mockBrowserApis(page: Page, yearView = false) {
   await page.route('**/api/v1/browser-items**', (route) =>
     route.fulfill({ json: yearView ? BROWSER_YEAR : BROWSER_FILES })
   );
-  await page.route('**/api/v1/shortcut**', (route) =>
-    route.fulfill({ json: [] })
-  );
+  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: [] }));
 }
 
 export async function mockBookmarksApis(page: Page) {
-  await page.route('**/api/v1/bookmark', (route) =>
-    route.fulfill({ json: BOOKMARKS })
-  );
+  await page.route('**/api/v1/bookmark', (route) => route.fulfill({ json: BOOKMARKS }));
 }
 
 export async function stallAllApis(page: Page) {
   await page.route('**/api/**', async (route) => {
     // Keep request pending until the page closes (webkit requires a clean abort on teardown)
-    await new Promise<void>((resolve) => page.once('close', resolve));
+    await new Promise<void>((resolve) => page.once('close', () => resolve()));
     await route.abort().catch(() => {});
   });
 }

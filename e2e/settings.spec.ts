@@ -11,9 +11,7 @@ test.describe('MainSettingForm', () => {
 
   test('success banner – BannerMessage success', async ({ page }) => {
     await mockSettingsApis(page);
-    await page.route('**/api/v1/settings/bulk', (route) =>
-      route.fulfill({ json: {} })
-    );
+    await page.route('**/api/v1/settings/bulk', (route) => route.fulfill({ json: {} }));
     await page.goto('/settings/main');
     await page.waitForLoadState('networkidle');
     await page.getByRole('button', { name: /save/i }).click();
