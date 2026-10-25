@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockBookmarksApis, stallAllApis } from './fixtures';
+import { mockBookmarksApis } from './fixtures/bookmarks';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('BookmarkListPage', () => {
   test('loaded – ListItem, BootStrapButton', async ({ page }) => {

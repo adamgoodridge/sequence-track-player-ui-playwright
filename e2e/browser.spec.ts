@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockBrowserApis, stallAllApis } from './fixtures';
+import { mockBrowserApis } from './fixtures/browser';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('BrowserPage', () => {
   test('file list – BrowserFileList, List, Breadcrumbs, BreadcrumbLink, BreadcrumbLast', async ({

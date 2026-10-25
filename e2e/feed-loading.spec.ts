@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { stallAllApis } from './fixtures';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('FeedLoading page', () => {
   test('loading state – LoadingSpinner with description', async ({ page }) => {

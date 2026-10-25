@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockHomeListApis, mockHomeIconApis, stallAllApis } from './fixtures';
+import { mockHomeListApis, mockHomeIconApis } from './fixtures/home';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('HomePage', () => {
   test('list view – Shortcuts, ListShortcuts, ListItem, Navigation', async ({ page }) => {
@@ -13,6 +14,28 @@ test.describe('HomePage', () => {
     await mockHomeIconApis(page);
     await page.goto('/');
     await page.waitForLoadState('networkidle');
+    const itemCenterOffsets = await page.locator('.icon-grid-item').evaluateAll((items) =>
+      items.map((item) => {
+        const image = item.querySelector('img');
+        const title = item.querySelector('.icon-grid-title');
+        if (!image || !title) {
+          throw new Error('Icon grid item is missing its image or title');
+        }
+
+        const itemBounds = item.getBoundingClientRect();
+        const imageBounds = image.getBoundingClientRect();
+        const titleBounds = title.getBoundingClientRect();
+        const itemCenter = itemBounds.left + itemBounds.width / 2;
+        const imageCenter = imageBounds.left + imageBounds.width / 2;
+        const titleCenter = titleBounds.left + titleBounds.width / 2;
+        return { imageOffset: imageCenter - itemCenter, titleOffset: titleCenter - itemCenter };
+      })
+    );
+    expect(
+      itemCenterOffsets.every(
+        ({ imageOffset, titleOffset }) => Math.abs(imageOffset) <= 1 && Math.abs(titleOffset) <= 1
+      )
+    ).toBe(true);
     await expect(page).toHaveScreenshot('home-icon-view.png');
   });
 

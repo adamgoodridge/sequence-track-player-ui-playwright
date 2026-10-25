@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockCurrentFeedsApis, stallAllApis } from './fixtures';
+import { mockCurrentFeedsApis } from './fixtures/current-feeds';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('CurrentFeeds page', () => {
   test('loaded – ListCurrentFeeds, List, ListItem', async ({ page }) => {

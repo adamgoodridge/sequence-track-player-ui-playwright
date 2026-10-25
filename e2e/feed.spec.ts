@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { mockFeedApis, stallAllApis } from './fixtures';
+import { mockFeedApis } from './fixtures/feed';
+import { stallAllApis } from './fixtures/shared';
 
 test.describe('FeedPage', () => {
   test('loaded – FeedView, FeedTitleSection, FeedPlayerSection, BottomRowButtons', async ({

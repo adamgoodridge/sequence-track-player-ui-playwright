@@ -1,7 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { mockStatsApis, mockDate, stallAllApis } from './fixtures';
+import { mockStatsApis } from './fixtures/stats';
+import { mockDate, stallAllApis } from './fixtures/shared';
 
 test.describe('StatsPage', () => {
+  test.beforeEach(async ({ page }) => {
+    await mockDate(page, '2026-10-18');
+  });
+
   test('loaded – DatePicker, DateRangePieChart, StatsCard, StatsList', async ({ page }) => {
     await mockStatsApis(page);
     await page.goto('/stats');
@@ -10,7 +15,6 @@ test.describe('StatsPage', () => {
   });
 
   test('no data state', async ({ page }) => {
-    await mockDate(page, '2026-10-18');
     await page.route('**/api/v1/statistic/summary/week**', (route) =>
       route.fulfill({ json: { length: 0, feedCounts: [], weekSummaries: [], totalLength: '0' } })
     );
@@ -27,7 +31,6 @@ test.describe('StatsPage', () => {
   });
 
   test('error state – ErrorAlert', async ({ page }) => {
-    await mockDate(page, '2026-10-18');
     await page.route('**/api/v1/statistic/summary/week**', (route) =>
       route.fulfill({ status: 500, body: 'error' })
     );
