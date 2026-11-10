@@ -3,6 +3,46 @@ import { mockFeedApis } from './fixtures/feed';
 import { stallAllApis } from './fixtures/shared';
 
 test.describe('FeedPage', () => {
+  test('regular change button is red when the API value is true', async ({ page }) => {
+    await mockFeedApis(page, 42);
+    await page.route('**/api/v1/settings/regularly_change_to_random', (route) =>
+      route.fulfill({ json: { name: 'regularly_change_to_random', value: true } })
+    );
+    await page.goto('/feed/42');
+
+    const button = page.getByRole('button', { name: /Turn (On|Off) regular change track/ });
+    await expect(button).toHaveClass(/\bbtn-danger\b/);
+    await expect(button).toHaveCSS('background-color', 'rgb(220, 53, 69)');
+    await expect(button).toHaveText('Turn Off regular change track');
+    await expect(button).toHaveScreenshot('regular-change-enabled.png');
+  });
+
+  test('regular change button follows the API value when toggled', async ({ page }) => {
+    await mockFeedApis(page, 42);
+    let value = false;
+    await page.route('**/api/v1/settings/regularly_change_to_random', async (route) => {
+      if (route.request().method() === 'PUT') {
+        const body = route.request().postDataJSON();
+        expect(body).toEqual({ value: !value });
+        value = body.value;
+      }
+      await route.fulfill({
+        json: { name: 'regularly_change_to_random', value, booleanValue: !value },
+      });
+    });
+    await page.goto('/feed/42');
+
+    const button = page.getByRole('button', { name: /Turn (On|Off) regular change track/ });
+    await expect(button).toHaveText('Turn On regular change track');
+    await expect(button).toHaveClass(/\bbtn-primary\b/);
+    await button.click();
+    await expect(button).toHaveText('Turn Off regular change track');
+    await expect(button).toHaveClass(/\bbtn-danger\b/);
+    await button.click();
+    await expect(button).toHaveText('Turn On regular change track');
+    await expect(button).toHaveClass(/\bbtn-primary\b/);
+  });
+
   test('loaded – FeedView, FeedTitleSection, FeedPlayerSection, BottomRowButtons', async ({
     page,
   }) => {

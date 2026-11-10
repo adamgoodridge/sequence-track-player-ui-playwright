@@ -14,22 +14,19 @@ export const FEED = {
 };
 
 export async function mockFeedApis(page: Page, feedId = 42) {
-  await page.route(`**/api/v1/feed/ownership/${feedId}`, (route) =>
-    route.fulfill({ json: { sessionId: 'session-abc' } })
-  );
-  await page.route(`**/api/v1/feed/status/${feedId}**`, (route) =>
-    route.fulfill({ json: { sessionId: 'session-abc', isLoaded: false } })
-  );
-  await page.route(`**/api/v1/feed/get/current/${feedId}**`, (route) =>
-    route.fulfill({ json: FEED })
-  );
-  await page.route(`**/api/v1/feed/get/next/${feedId}**`, (route) => route.fulfill({ json: FEED }));
-  await page.route('**/api/v1/settings/regularly_change_to_random', (route) =>
-    route.fulfill({
-      json: { booleanValue: false, name: 'regularly_change_to_random', value: false },
-    })
-  );
-  await page.route('**/api/v1/settings/is_scanning', (route) =>
-    route.fulfill({ json: { booleanValue: false, name: 'is_scanning', value: false } })
-  );
+  const responses: [string, unknown][] = [
+    [`feed/ownership/${feedId}`, { sessionId: FEED.sessionId }],
+    [`feed/status/${feedId}**`, { sessionId: FEED.sessionId, isLoaded: false }],
+    ...['current', 'next'].map((action): [string, unknown] => [
+      `feed/get/${action}/${feedId}**`,
+      FEED,
+    ]),
+    ...['regularly_change_to_random', 'is_scanning'].map((name): [string, unknown] => [
+      `settings/${name}`,
+      { booleanValue: false, name, value: false },
+    ]),
+  ];
+  for (const [endpoint, json] of responses) {
+    await page.route(`**/api/v1/${endpoint}`, (route) => route.fulfill({ json }));
+  }
 }

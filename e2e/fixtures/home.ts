@@ -13,15 +13,8 @@ export const SHORTCUTS = [
 ];
 
 export const ICON_SHORTCUTS = [
-  { id: '1', feedName: 'jazz', title: 'Jazz', logoPath: 'FlagA.png', count: 3, sessionId: '' },
-  {
-    id: '2',
-    feedName: 'classical',
-    title: 'Classical',
-    logoPath: 'FlagC.png',
-    count: 0,
-    sessionId: '',
-  },
+  { ...SHORTCUTS[0], logoPath: 'FlagA.png' },
+  { ...SHORTCUTS[1], logoPath: 'FlagC.png' },
   { id: '3', feedName: 'rock', title: 'Rock', logoPath: 'FlagB.png', count: 5, sessionId: '' },
   { id: '4', feedName: 'blues', title: 'Blues', logoPath: '', count: 7, sessionId: '' },
   { id: '5', feedName: 'electronic', title: 'Electronic', logoPath: '', count: 2, sessionId: '' },
@@ -45,14 +38,18 @@ export const ICON_SHORTCUTS = [
   },
 ];
 
-export async function mockHomeListApis(page: Page) {
+async function mockHomeApis(page: Page, logoView: boolean, shortcuts: typeof SHORTCUTS) {
   await page.route('**/api/v1/settings/logo_view', (route) =>
-    route.fulfill({ json: { booleanValue: false, name: 'logo_view', value: false } })
+    route.fulfill({ json: { booleanValue: logoView, name: 'logo_view', value: logoView } })
   );
-  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: SHORTCUTS }));
+  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: shortcuts }));
   await page.route('**/api/v1/commit-time', (route) =>
     route.fulfill({ json: { commitTime: '2024-01-01T00:00:00Z' } })
   );
+}
+
+export async function mockHomeListApis(page: Page) {
+  await mockHomeApis(page, false, SHORTCUTS);
 }
 
 export async function mockHomeIconApis(page: Page) {
@@ -66,11 +63,5 @@ export async function mockHomeIconApis(page: Page) {
       ? route.fulfill({ path: logo })
       : route.fulfill({ contentType: 'image/svg+xml', body: logo });
   });
-  await page.route('**/api/v1/settings/logo_view', (route) =>
-    route.fulfill({ json: { booleanValue: true, name: 'logo_view', value: true } })
-  );
-  await page.route('**/api/v1/shortcut**', (route) => route.fulfill({ json: ICON_SHORTCUTS }));
-  await page.route('**/api/v1/commit-time', (route) =>
-    route.fulfill({ json: { commitTime: '2024-01-01T00:00:00Z' } })
-  );
+  await mockHomeApis(page, true, ICON_SHORTCUTS);
 }
